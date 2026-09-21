@@ -179,7 +179,7 @@ function trazoPetalo(forma, L, W, wl, wr, tx) {
 
 /* ---------- El ramo ---------- */
 
-function crearFlor(nombre, pref) {
+function crearFlor(nombre, pref, ligero) {
   const norm = normalizar(nombre);
   const hash = cyrb53(norm);
   const rnd = mulberry32(hash);
@@ -213,9 +213,12 @@ function crearFlor(nombre, pref) {
     return pick(COLORES);
   };
 
+  // En modo ligero (celulares) solo se dibujan las primeras flores
+  const mVis = ligero ? Math.max(4, Math.ceil(m * .55)) : m;
+
   // Tiempos (segundos)
-  const tFlor0 = 1.5, sep = Math.min(.45, 3.2 / (m - 1));
-  const lastStart = tFlor0 + (m - 1) * sep;
+  const tFlor0 = 1.5, sep = Math.min(.45, 3.2 / (mVis - 1));
+  const lastStart = tFlor0 + (mVis - 1) * sep;
   const t = { nombre: lastStart, extra: lastStart + 1.2 };
   t.mensaje = t.nombre + 1;
   t.acciones = t.mensaje + .5;
@@ -357,6 +360,7 @@ function crearFlor(nombre, pref) {
   };
   // Vaivén propio de cada flor (tallo y cabeza giran juntos alrededor de la base)
   const mece = (g, c) => {
+    if (ligero) return;
     const v = (x) => `${f(x)} ${f(gx)} ${gy}`;
     el('animateTransform', {
       attributeName: 'transform', type: 'rotate', values: `${v(-c.sa)};${v(c.sa)};${v(-c.sa)}`,
@@ -369,7 +373,7 @@ function crearFlor(nombre, pref) {
     const c2x = c.hx + r(-22, 22), c2y = c.hy + (gy - c.hy) * .4;
     const d = `M${f(gx)},${gy}C${f(c1x)},${c1y} ${f(c2x)},${f(c2y)} ${f(c.hx)},${f(c.hy)}`;
     const dl = .2 + c.fi * .1;
-    const gt = el('g', null, capa);
+    const gt = el('g', { 'data-fi': c.fi }, capa);
     mece(gt, c);
     retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(108, 36, 30), 'stroke-width': c.principal ? 6.5 : 5, 'stroke-linecap': 'round' }, gt), dl);
     retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(105, 40, 46), 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-opacity': .5, transform: 'translate(-1,0)' }, gt), dl);
@@ -390,16 +394,16 @@ function crearFlor(nombre, pref) {
     const total = c.nPet * c.capas;
     const paso = Math.min(.07, 1 / total);
     const inicio = tFlor0 + c.fi * sep;
-    const sw = el('g', null, capa);
+    const sw = el('g', { 'data-fi': c.fi }, capa);
     mece(sw, c);
     const g0 = el('g', { transform: `translate(${f(c.hx)},${f(c.hy)})` }, sw);
     const cab = el('g', { class: 'cabeza' }, g0);
     retraso(cab, inicio + total * paso + 1.2 + c.fi * .3);
-    const ring = el('circle', {
+    const ring = ligero ? null : el('circle', {
       class: 'destello', r: f(c.R * .95), fill: 'none', opacity: 0,
       stroke: hsla(52, 100, 88, .95), 'stroke-width': 3
     }, g0);
-    retraso(ring, inicio + total * paso + .1);
+    if (ring) retraso(ring, inicio + total * paso + .1);
 
     const escalas = [1, .76, .54];
     const pasoAng = 360 / c.nPet;
@@ -409,24 +413,24 @@ function crearFlor(nombre, pref) {
       const off = c.rot0 + li * pasoAng / 2 + (li ? r(-pasoAng * .15, pasoAng * .15) : 0);
       const h = c.amarillo.h - li * 2.5, s = c.amarillo.s;
       const l = c.amarillo.l + c.dBrillo - li * 2;
+      const gid = `${pref}-c${c.fi}-${li}`;
+      gradiente(defs, gid, 'linearGradient', { x1: 0, y1: 1, x2: 0, y2: 0 }, [
+        [0, hsl(h, s, clamp(l - 16, 20, 90))],
+        [.55, hsl(h, s, clamp(l, 20, 90))],
+        [1, hsl(h, s, clamp(l + 9, 20, 92))]
+      ]);
       for (let i = 0; i < c.nPet; i++) {
         const v = valor(i + li * 2 + c.fi * 4);
         const L = c.R * esc * (.68 + .64 * v);
         const W = L * clamp(1.9 / c.nPet, .09, .4) * ANCHO_FORMA[c.forma];
         const ang = off + i * pasoAng + (valor(i + 7 + c.fi) - .5) * pasoAng * .2;
         const dl = (valor(i + 3 + li + c.fi) - .5) * 7;
-        const gid = `${pref}-c${c.fi}-${idx}`;
-        gradiente(defs, gid, 'linearGradient', { x1: 0, y1: 1, x2: 0, y2: 0 }, [
-          [0, hsl(h, s, clamp(l + dl - 16, 20, 90))],
-          [.55, hsl(h, s, clamp(l + dl, 20, 90))],
-          [1, hsl(h, s, clamp(l + dl + 9, 20, 92))]
-        ]);
-        const g = el('g', { transform: `rotate(${f(ang)})` }, cab);
+        const g = el('g', { transform: `rotate(${f(ang)})`, 'data-capa': li }, cab);
         const p = el('g', { class: 'petalo' }, g);
         retraso(p, inicio + idx * paso);
         el('path', {
           d: trazoPetalo(c.forma, L, W, r(.86, 1.14), r(.86, 1.14), r(-.14, .14) * W),
-          fill: `url(#${gid})`, stroke: hsl(h, s - 5, l - 22), 'stroke-width': .8, 'stroke-opacity': .5,
+          fill: `url(#${gid})`, opacity: f(.88 + (dl + 3.5) / 7 * .12), stroke: hsl(h, s - 5, l - 22), 'stroke-width': .8, 'stroke-opacity': .5,
           'stroke-linejoin': 'round'
         }, p);
         el('path', {
@@ -507,7 +511,7 @@ function crearFlor(nombre, pref) {
   // Voladores: mariposas, abejas y luciérnagas (2 o 3, distintas según el nombre)
   const volador = (tipo, i, ex, ey, lado) => {
     const escE = r(.95, 1.25);
-    const ext = el('g', { transform: `translate(${f(ex)},${f(ey)}) rotate(${f(r(-18, 18))}) scale(${f(escE)})` }, svg);
+    const ext = el('g', { 'data-vol': i, transform: `translate(${f(ex)},${f(ey)}) rotate(${f(r(-18, 18))}) scale(${f(escE)})` }, svg);
     const flota = el('g', { class: 'extra' }, ext);
     retraso(flota, t.extra + i * .5);
     flota.style.animationDuration = `.9s, ${f(r(7, 13))}s`;
@@ -567,7 +571,7 @@ function crearFlor(nombre, pref) {
   const nChispas = 3 + Math.floor(rnd() * 8);
   for (let i = 0; i < nChispas; i++) {
     const s = r(.6, 1.2);
-    const g = el('g', { transform: `translate(${f(r(30, 370))},${f(r(40, 340))}) scale(${f(s)})` }, svg);
+    const g = el('g', { 'data-chi': i, transform: `translate(${f(r(30, 370))},${f(r(40, 340))}) scale(${f(s)})` }, svg);
     const ch = el('path', {
       class: 'chispa', d: 'M0,-6C1,-2 2,-1 6,0C2,1 1,2 0,6C-1,2 -2,1 -6,0C-2,-1 -1,-2 0,-6Z',
       fill: '#fffdf0', stroke: hsla(40, 80, 60, .6), 'stroke-width': .5
@@ -579,10 +583,28 @@ function crearFlor(nombre, pref) {
   const nPolen = 8 + Math.floor(rnd() * 8);
   for (let i = 0; i < nPolen; i++) {
     const c = cabezas[Math.floor(rnd() * cabezas.length)];
-    const g = el('g', { transform: `translate(${f(c.hx + r(-c.R, c.R))},${f(c.hy + r(-c.R * .3, c.R * .3))})` }, svg);
+    const g = el('g', { 'data-pol': i, transform: `translate(${f(c.hx + r(-c.R, c.R))},${f(c.hy + r(-c.R * .3, c.R * .3))})` }, svg);
     const p = el('circle', { class: 'polen', r: f(r(1.2, 2.6)), fill: hsla(52, 100, 80, .95), opacity: 0 }, g);
     retraso(p, t.extra + r(0, 5));
     p.style.animationDuration = `${f(r(4, 8))}s`;
+  }
+
+  if (ligero) {
+    svg.classList.add('ligero');
+    const dentro = (n, sel) => n.closest(sel);
+    svg.querySelectorAll('[data-fi]').forEach(n => { if (+n.dataset.fi >= mVis) n.remove(); });
+    svg.querySelectorAll('[data-capa]').forEach(n => {
+      const fi = +dentro(n, '[data-fi]').dataset.fi;
+      if (fi > 0 && +n.dataset.capa > 0) n.remove();
+    });
+    svg.querySelectorAll('[data-vol]').forEach(n => { if (+n.dataset.vol >= 2) n.remove(); });
+    svg.querySelectorAll('[data-chi]').forEach(n => { if (+n.dataset.chi >= 3) n.remove(); });
+    svg.querySelectorAll('[data-pol]').forEach(n => { if (+n.dataset.pol >= 3) n.remove(); });
+    // quita degradados y recortes que quedaron sin uso
+    const xml = svg.innerHTML;
+    Array.from(defs.children).forEach(d => {
+      if (d.id && !xml.includes(`url(#${d.id})`)) d.remove();
+    });
   }
 
   return {
@@ -597,6 +619,9 @@ function crearFlor(nombre, pref) {
    ========================================================= */
 
 const $ = id => document.getElementById(id);
+const LIGERO = window.matchMedia('(max-width: 700px)').matches ||
+  window.matchMedia('(pointer: coarse)').matches ||
+  (navigator.deviceMemory && navigator.deviceMemory <= 4);
 const inicio = $('inicio'), resultado = $('resultado'), form = $('form');
 const campo = $('nombre'), errorEl = $('error'), contFlor = $('flor');
 const nombreEl = $('nombre-flor'), mensajeEl = $('mensaje'), avisoEl = $('aviso');
@@ -638,7 +663,7 @@ function mostrarFlor(crudo) {
   if (!nombre) return false;
   nombreActual = nombre;
 
-  const { svg, tiempos, mensaje } = crearFlor(nombre, 'f');
+  const { svg, tiempos, mensaje } = crearFlor(nombre, 'f', LIGERO);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `Ramo de primavera de ${nombre}`);
   contFlor.replaceChildren(svg);
@@ -687,9 +712,9 @@ function partirLineas(ctx, texto, ancho) {
 }
 
 async function descargarPng() {
-  const original = contFlor.querySelector('svg');
-  if (!original) return;
-  const clon = original.cloneNode(true);
+  if (!nombreActual) return;
+  // Para la imagen se dibuja el ramo completo, aunque en pantalla se muestre la versión ligera
+  const clon = crearFlor(nombreActual, 'p', false).svg;
   clon.setAttribute('xmlns', SVG_NS);
   clon.setAttribute('width', 960);
   clon.setAttribute('height', 1296);
@@ -771,7 +796,7 @@ async function descargarPng() {
 function crearLluvia() {
   const cont = $('lluvia');
   const colores = ['#ffe27a', '#ffd23f', '#fff1a8', '#ffc4a3', '#ffefc2'];
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < (LIGERO ? 7 : 16); i++) {
     const p = document.createElement('i');
     p.style.setProperty('--x', `${Math.random() * 100}%`);
     p.style.setProperty('--s', `${8 + Math.random() * 10}px`);
@@ -811,7 +836,7 @@ crearLluvia();
 
 // Adorno de la pantalla inicial: un ramito de muestra
 (function () {
-  const { svg } = crearFlor('Primavera', 'o');
+  const { svg } = crearFlor('Primavera', 'o', true);
   svg.setAttribute('aria-hidden', 'true');
   $('adorno').appendChild(svg);
 })();

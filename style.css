@@ -52,6 +52,10 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+@media (max-width: 700px), (pointer: coarse) {
+  body::after { display: none; }
+}
+
 /* Pétalos cayendo */
 #lluvia { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 #lluvia i {
@@ -206,6 +210,7 @@ input.tiembla { animation: temblar .4s; }
   transform-origin: 50% 100%;
   animation: mecer 7s ease-in-out 6s infinite alternate;
 }
+.flor svg.ligero, .ligero .cabeza { animation: none; }
 @keyframes mecer { from { transform: rotate(-1.4deg); } to { transform: rotate(1.4deg); } }
 
 .nombre {
