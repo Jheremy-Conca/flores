@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tu flor de primavera</title>
+  <meta name="description" content="Escribe tu nombre y descubre el ramo de flores amarillas que nace solo para ti. Feliz Día de la Primavera.">
+  <meta name="theme-color" content="#ffe48a">
+  <meta property="og:title" content="Tu flor de primavera">
+  <meta property="og:description" content="Cada nombre tiene su flor. Descubre la tuya.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%BC%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="lluvia" aria-hidden="true"></div>
+
+  <main>
+    <!-- Pantalla inicial -->
+    <section id="inicio" class="pantalla">
+      <div id="adorno" class="adorno" aria-hidden="true"></div>
+      <p class="kicker">Día de la Primavera</p>
+      <h1>Cada nombre <em>tiene su flor</em></h1>
+      <p class="sub">Escribe tu nombre y mira qué ramo de flores amarillas nace solo para ti.</p>
+
+      <form id="form" novalidate>
+        <label for="nombre">¿Cómo te llamas?</label>
+        <input id="nombre" name="nombre" type="text" maxlength="30"
+               autocomplete="given-name" autocapitalize="words" spellcheck="false"
+               placeholder="Tu nombre">
+        <p id="error" class="error" role="alert"></p>
+        <button class="btn primario" type="submit">Descubrir mi flor</button>
+      </form>
+    </section>
+
+    <!-- Pantalla de resultado -->
+    <section id="resultado" class="pantalla" hidden>
+      <div id="flor" class="flor"></div>
+      <h2 class="nombre"><span id="nombre-flor"></span></h2>
+      <p id="mensaje" class="mensaje"></p>
+
+      <div class="acciones">
+        <button id="btn-png" class="btn primario" type="button">Descargar mi flor</button>
+        <button id="btn-copiar" class="btn suave" type="button">Copiar link</button>
+      </div>
+      <button id="btn-otra" class="btn texto" type="button">Otra persona</button>
+    </section>
+  </main>
+
+  <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+
+  <script src="flor.js"></script>
+</body>
+</html>
