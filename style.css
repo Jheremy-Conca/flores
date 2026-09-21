@@ -284,6 +284,18 @@ input.tiembla { animation: temblar .4s; }
 .brillo { transform-box: fill-box; transform-origin: 50% 50%; animation: pulso 2.2s ease-in-out infinite alternate; }
 @keyframes pulso { from { opacity: .3; transform: scale(.8); } to { opacity: 1; transform: scale(1.15); } }
 
+.destello { transform-box: fill-box; transform-origin: 50% 50%; animation: destello 1.3s ease-out both; }
+@keyframes destello {
+  from { opacity: .9; transform: scale(.3); }
+  to   { opacity: 0; transform: scale(1.7); }
+}
+.polen { animation: polen 6s ease-out infinite; }
+@keyframes polen {
+  0%   { opacity: 0; transform: translate(0, 0); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(14px, -70px); }
+}
+
 /* ---------- Aviso ---------- */
 .aviso {
   position: fixed;

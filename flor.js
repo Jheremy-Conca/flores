@@ -91,6 +91,7 @@ const PAPELES = [
   [[10, 50, 74], [12, 70, 87], [10, 40, 62]]    // rosado
 ];
 const CINTAS = [[120, 34, 32], [8, 66, 56], [28, 45, 28], [280, 30, 45]];
+const JARRONES = [[18, 55, 52], [210, 45, 45], [40, 30, 92], [150, 30, 40], [270, 30, 60], [8, 60, 45]];
 
 const MENSAJES = [
   n => `${n}, que hoy florezca todo lo bueno que llevas dentro. Que la primavera te regale días largos, cielos claros y motivos de sobra para sonreír.`,
@@ -185,7 +186,7 @@ function crearFlor(nombre, pref) {
 
   // Estilo del ramo: 0 abanico, 1 esbelto (pocas flores grandes), 2 cúpula (muchas pequeñas)
   const estilo = Math.floor(rnd() * 3);
-  const nComp = estilo === 0 ? 6 + Math.floor(rnd() * 4) : estilo === 1 ? 4 + Math.floor(rnd() * 3) : 8 + Math.floor(rnd() * 3);
+  const nComp = estilo === 0 ? 9 + Math.floor(rnd() * 5) : estilo === 1 ? 6 + Math.floor(rnd() * 4) : 12 + Math.floor(rnd() * 5);
   const m = nComp + 1;
 
   // Esquema de amarillos: la flor principal manda; las demás son del mismo tono, vecinas o libres
@@ -214,7 +215,8 @@ function crearFlor(nombre, pref) {
 
   const [pTras, pDel, pPli] = pick(PAPELES);
   const cinta = pick(CINTAS);
-  const gx = 200 + r(-4, 4), gy = 452;   // punto donde se juntan los tallos
+  const holder = Math.floor(rnd() * 3);   // 0 papel, 1 jarrón, 2 frasco de vidrio
+  const gx = 200 + r(-4, 4), gy = holder === 2 ? 500 : 452;   // punto donde se juntan los tallos
 
   // Aura suave detrás del ramo
   gradiente(defs, `${pref}-aura`, 'radialGradient', {}, [
@@ -226,18 +228,20 @@ function crearFlor(nombre, pref) {
   const sx = r(.85, 1.2);
   const tilt = r(-7, 7);
   const ancho = `translate(200,0) scale(${f(sx)},1) translate(-200,0)`;
-  const trasero = el('g', { class: 'papel' }, el('g', { transform: ancho }, svg));
-  retraso(trasero, .3);
-  el('path', {
-    d: 'M76,386Q138,372 200,390Q262,372 324,386L215,535Q200,541 185,535Z',
-    fill: hsl(pTras[0], pTras[1], pTras[2]), stroke: hsl(pPli[0], pPli[1], pPli[2] - 10),
-    'stroke-width': 1, 'stroke-linejoin': 'round'
-  }, trasero);
+  if (holder === 0) {
+    const trasero = el('g', { class: 'papel' }, el('g', { transform: ancho }, svg));
+    retraso(trasero, .3);
+    el('path', {
+      d: 'M76,386Q138,372 200,390Q262,372 324,386L215,535Q200,541 185,535Z',
+      fill: hsl(pTras[0], pTras[1], pTras[2]), stroke: hsl(pPli[0], pPli[1], pPli[2] - 10),
+      'stroke-width': 1, 'stroke-linejoin': 'round'
+    }, trasero);
+  }
 
   // Hoja alargada (sirve para follaje y para hojas de tallo)
-  const hoja = (x, y, ang, L, ancho, tono, d) => {
+  const hoja = (x, y, ang, L, ancho, tono, d, padre) => {
     const W = L * ancho;
-    const g = el('g', { transform: `translate(${f(x)},${f(y)}) rotate(${f(ang)})` }, capa);
+    const g = el('g', { transform: `translate(${f(x)},${f(y)}) rotate(${f(ang)})` }, padre || capa);
     const h = el('g', { class: 'hoja' }, g);
     retraso(h, d);
     el('path', {
@@ -291,10 +295,11 @@ function crearFlor(nombre, pref) {
     fi, principal, hx, hy, R, z,
     nPet: principal ? clamp(nL, 5, 14) : 5 + Math.floor(valor(fi * 5 + 2) * 14),
     forma: pick(FORMAS),
-    capas: principal ? 1 + Math.floor(rnd() * 3) : 1 + Math.floor(rnd() * 2),
+    capas: principal ? 1 + Math.floor(rnd() * 3) : (nComp > 10 ? 1 : 1 + Math.floor(rnd() * 2)),
     amarillo: colorDe(principal),
     dBrillo: r(-4, 4),
-    rot0: r(0, 360)
+    rot0: r(0, 360),
+    sa: r(1.1, 2.4) * (rnd() < .5 ? 1 : -1), sd: r(4.5, 7.5), sb: -r(0, 7)
   });
   const RP = estilo === 0 ? [76, 86] : estilo === 1 ? [90, 100] : [60, 68];
   const HP = estilo === 0 ? [165, 178] : estilo === 1 ? [140, 155] : [178, 192];
@@ -305,17 +310,24 @@ function crearFlor(nombre, pref) {
       () => [r(46, 62), r(292, 312), r(44, 52), 3],
       () => [r(128, 138), r(290, 320), r(38, 44), 0],
       () => [r(150, 158), r(225, 245), r(34, 38), 0],
-      () => [r(22, 34), r(262, 278), r(38, 44), 3]],
+      () => [r(22, 34), r(262, 278), r(38, 44), 3],
+      () => [r(104, 116), r(150, 166), r(36, 42), 0],
+      () => [r(70, 84), r(330, 345), r(34, 38), 3]],
     [ // esbelto
       () => [r(68, 84), r(248, 270), r(64, 74), 1],
       () => [r(30, 42), r(322, 336), r(50, 56), 3],
-      () => [r(112, 122), r(292, 308), r(46, 52), 0]],
+      () => [r(112, 122), r(292, 308), r(46, 52), 0],
+      () => [r(120, 132), r(190, 205), r(40, 46), 0],
+      () => [r(70, 84), r(350, 364), r(34, 40), 3]],
     [ // cúpula
       () => [r(58, 66), r(128, 144), r(42, 48), 0],
       () => [r(104, 114), r(190, 206), r(44, 50), 1],
       () => [r(58, 70), r(262, 278), r(46, 52), 3],
       () => [r(140, 148), r(250, 268), r(38, 42), 0],
-      () => [r(150, 158), r(190, 206), r(32, 36), 0]]
+      () => [r(150, 158), r(190, 206), r(32, 36), 0],
+      () => [r(30, 42), r(100, 112), r(34, 38), 0],
+      () => [r(104, 114), r(300, 316), r(36, 40), 3],
+      () => [r(22, 32), r(330, 346), r(34, 38), 3]]
   ][estilo];
   for (let k = 0; k < nComp; k++) {
     const lado = k % 2 ? 1 : -1;
@@ -332,13 +344,24 @@ function crearFlor(nombre, pref) {
     const v = 1 - u;
     return 3 * v * v * (p1 - p0) + 6 * v * u * (p2 - p1) + 3 * u * u * (p3 - p2);
   };
+  // Vaivén propio de cada flor (tallo y cabeza giran juntos alrededor de la base)
+  const mece = (g, c) => {
+    const v = (x) => `${f(x)} ${f(gx)} ${gy}`;
+    el('animateTransform', {
+      attributeName: 'transform', type: 'rotate', values: `${v(-c.sa)};${v(c.sa)};${v(-c.sa)}`,
+      keyTimes: '0;.5;1', calcMode: 'spline', keySplines: '.45 0 .55 1;.45 0 .55 1',
+      dur: `${f(c.sd)}s`, begin: `${f(c.sb)}s`, repeatCount: 'indefinite'
+    }, g);
+  };
   for (const c of cabezas) {
-    const c1x = gx + (c.hx - gx) * .15 + r(-12, 12), c1y = 400;
+    const c1x = gx + (c.hx - gx) * .15 + r(-12, 12), c1y = gy - 52;
     const c2x = c.hx + r(-22, 22), c2y = c.hy + (gy - c.hy) * .4;
     const d = `M${f(gx)},${gy}C${f(c1x)},${c1y} ${f(c2x)},${f(c2y)} ${f(c.hx)},${f(c.hy)}`;
     const dl = .2 + c.fi * .1;
-    retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(108, 36, 30), 'stroke-width': c.principal ? 6.5 : 5, 'stroke-linecap': 'round' }, capa), dl);
-    retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(105, 40, 46), 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-opacity': .5, transform: 'translate(-1,0)' }, capa), dl);
+    const gt = el('g', null, capa);
+    mece(gt, c);
+    retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(108, 36, 30), 'stroke-width': c.principal ? 6.5 : 5, 'stroke-linecap': 'round' }, gt), dl);
+    retraso(el('path', { class: 'tallo', pathLength: 1, d, fill: 'none', stroke: hsl(105, 40, 46), 'stroke-width': 1.6, 'stroke-linecap': 'round', 'stroke-opacity': .5, transform: 'translate(-1,0)' }, gt), dl);
 
     const nH = c.principal ? 2 : 1;
     for (let k = 0; k < nH; k++) {
@@ -347,7 +370,7 @@ function crearFlor(nombre, pref) {
       const a0 = Math.atan2(dbez(u, gx, c1x, c2x, c.hx), -dbez(u, gy, c1y, c2y, c.hy)) * 180 / Math.PI;
       const lado = (c.fi + k) % 2 ? 1 : -1;
       const L = 40 + 46 * valor(c.fi * 3 + k + 1);
-      hoja(px, py, a0 + lado * r(40, 68), L, .3, hojaTono + r(-8, 8), dl + .2 + u * 1.1);
+      hoja(px, py, a0 + lado * r(40, 68), L, .3, hojaTono + r(-8, 8), dl + .2 + u * 1.1, gt);
     }
   }
 
@@ -356,9 +379,16 @@ function crearFlor(nombre, pref) {
     const total = c.nPet * c.capas;
     const paso = Math.min(.07, 1 / total);
     const inicio = tFlor0 + c.fi * sep;
-    const g0 = el('g', { transform: `translate(${f(c.hx)},${f(c.hy)})` }, capa);
+    const sw = el('g', null, capa);
+    mece(sw, c);
+    const g0 = el('g', { transform: `translate(${f(c.hx)},${f(c.hy)})` }, sw);
     const cab = el('g', { class: 'cabeza' }, g0);
     retraso(cab, inicio + total * paso + 1.2 + c.fi * .3);
+    const ring = el('circle', {
+      class: 'destello', r: f(c.R * .95), fill: 'none', opacity: 0,
+      stroke: hsla(52, 100, 88, .95), 'stroke-width': 3
+    }, g0);
+    retraso(ring, inicio + total * paso + .1);
 
     const escalas = [1, .76, .54];
     const pasoAng = 360 / c.nPet;
@@ -433,6 +463,7 @@ function crearFlor(nombre, pref) {
   // De atrás hacia adelante
   cabezas.slice().sort((a, b) => a.z - b.z || a.fi - b.fi).forEach(dibujarCabeza);
 
+  if (holder === 0) {
   // Papel delantero con pliegues
   const delantero = el('g', { class: 'papel' }, el('g', { transform: ancho }, svg));
   retraso(delantero, 1);
@@ -460,56 +491,108 @@ function crearFlor(nombre, pref) {
     el('path', { d: 'M196,467C182,458 166,462 172,470', fill: 'none', stroke: hsla(0, 0, 100, .3), 'stroke-width': 1.2, 'stroke-linecap': 'round' }, g);
   }
   el('ellipse', { cx: 200, cy: 468, rx: 7, ry: 6, fill: cn, stroke: cnO, 'stroke-width': .8 }, lazo);
-
-  // Detalle extra: mariposa, abeja o luciérnaga
-  const lado = rnd() < .5 ? -1 : 1;
-  const ex = 200 + lado * r(150, 172), ey = r(45, 115);
-  const tipoExtra = hash % 3;
-  const escE = r(.95, 1.25);
-  const ext = el('g', { transform: `translate(${f(ex)},${f(ey)}) rotate(${f(r(-18, 18))}) scale(${f(escE)})` }, svg);
-  const flota = el('g', { class: 'extra' }, ext);
-  retraso(flota, t.extra);
-
-  if (tipoExtra === 0) {
-    const [ah, as, al] = pick(ALAS_MARIPOSA);
-    const ala = padre => {
-      const a = el('g', { class: 'ala' }, padre);
-      el('path', { d: 'M0,0C-6,-24 -34,-28 -30,-8C-28,0 -10,4 0,0Z', fill: hsl(ah, as, al), stroke: hsl(ah, as, al - 22), 'stroke-width': .8 }, a);
-      el('path', { d: 'M0,2C-16,4 -26,16 -20,22C-14,26 -4,14 0,2Z', fill: hsl(ah + 10, as, al + 6), stroke: hsl(ah, as, al - 22), 'stroke-width': .8 }, a);
-      el('circle', { cx: -22, cy: -11, r: 3.2, fill: hsla(0, 0, 100, .75) }, a);
-      el('circle', { cx: -15, cy: 14, r: 2, fill: hsla(0, 0, 100, .7) }, a);
-    };
-    ala(flota);
-    ala(el('g', { transform: 'scale(-1,1)' }, flota));
-    el('ellipse', { cx: 0, cy: 4, rx: 1.8, ry: 10, fill: '#3a2c10' }, flota);
-    el('path', { d: 'M0,-5Q-4,-14 -8,-15M0,-5Q4,-14 8,-15', fill: 'none', stroke: '#3a2c10', 'stroke-width': 1, 'stroke-linecap': 'round' }, flota);
-  } else if (tipoExtra === 1) {
-    const cid = `${pref}-abeja`;
-    const dir = el('g', { transform: lado === -1 ? 'scale(-1,1)' : '' }, flota);
-    el('path', { d: 'M12,2C30,-14 46,18 66,0', fill: 'none', stroke: hsla(35, 40, 30, .4), 'stroke-width': 1.4, 'stroke-dasharray': '2 5', 'stroke-linecap': 'round' }, dir);
-    const clip = el('clipPath', { id: cid }, defs);
-    el('ellipse', { cx: 0, cy: 0, rx: 12, ry: 8.5 }, clip);
-    for (const rot of [-20, 20]) {
-      const w = el('g', { transform: `translate(1,-7) rotate(${rot})` }, dir);
-      el('ellipse', { class: 'alab', cx: 0, cy: -6, rx: 5, ry: 8, fill: 'rgba(255,255,255,.75)', stroke: 'rgba(120,170,200,.6)', 'stroke-width': .8 }, w);
-    }
-    el('ellipse', { cx: 0, cy: 0, rx: 12, ry: 8.5, fill: '#ffc933' }, dir);
-    const rayas = el('g', { 'clip-path': `url(#${cid})` }, dir);
-    el('rect', { x: -4, y: -10, width: 4, height: 20, fill: '#3a2c10' }, rayas);
-    el('rect', { x: 4, y: -10, width: 4, height: 20, fill: '#3a2c10' }, rayas);
-    el('circle', { cx: -12, cy: 0, r: 5.5, fill: '#3a2c10' }, dir);
-    el('circle', { cx: -14, cy: -1.5, r: 1.1, fill: '#fff' }, dir);
-    el('path', { d: 'M12,0L17,0', stroke: '#3a2c10', 'stroke-width': 2, 'stroke-linecap': 'round' }, dir);
-  } else {
-    gradiente(defs, `${pref}-luz`, 'radialGradient', {}, [
-      [0, 'rgba(240,255,120,.95)'], [.4, 'rgba(230,255,100,.4)'], [1, 'rgba(230,255,100,0)']
+  } else if (holder === 1) {
+    // Jarrón de cerámica
+    const [vh, vs, vl] = pick(JARRONES);
+    const deco = Math.floor(rnd() * 3);
+    const cuerpo = 'M158,402Q150,402 152,416Q150,436 130,470Q118,512 158,530Q200,538 242,530Q282,512 270,470Q250,436 248,416Q250,402 242,402Z';
+    gradiente(defs, `${pref}-vz`, 'linearGradient', { x1: 0, y1: 0, x2: 1, y2: 0 }, [
+      [0, hsl(vh, vs, vl + 12)], [.45, hsl(vh, vs, vl)], [1, hsl(vh, vs, vl - 14)]
     ]);
-    el('circle', { class: 'brillo', cx: 0, cy: 7, r: 20, fill: `url(#${pref}-luz)` }, flota);
-    el('ellipse', { cx: -4, cy: -2, rx: 3, ry: 6, fill: 'rgba(255,255,255,.6)', transform: 'rotate(-30 -4 -2)' }, flota);
-    el('ellipse', { cx: 4, cy: -2, rx: 3, ry: 6, fill: 'rgba(255,255,255,.6)', transform: 'rotate(30 4 -2)' }, flota);
-    el('ellipse', { cx: 0, cy: 0, rx: 2.6, ry: 6, fill: '#3a2c10' }, flota);
-    el('circle', { cx: 0, cy: -6.5, r: 2.4, fill: '#3a2c10' }, flota);
-    el('ellipse', { class: 'brillo', cx: 0, cy: 7, rx: 3.2, ry: 4, fill: '#f4ff8a' }, flota);
+    el('path', { d: cuerpo }, el('clipPath', { id: `${pref}-vc` }, defs));
+    const frente = el('g', { class: 'papel' }, svg);
+    retraso(frente, 1);
+    el('path', { d: cuerpo, fill: `url(#${pref}-vz)`, stroke: hsl(vh, vs, vl - 22), 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, frente);
+    const dec = el('g', { 'clip-path': `url(#${pref}-vc)` }, frente);
+    if (deco === 0) {
+      el('rect', { x: 110, y: 446, width: 180, height: 10, fill: hsla(0, 0, 100, .4) }, dec);
+      el('rect', { x: 110, y: 492, width: 180, height: 5, fill: hsla(vh, vs, vl - 25, .5) }, dec);
+    } else if (deco === 1) {
+      for (let row = 0; row < 4; row++) for (let col = 0; col < 7; col++) {
+        el('circle', { cx: 132 + col * 22 + (row % 2) * 11, cy: 450 + row * 18, r: 3.2, fill: hsla(0, 0, 100, .45) }, dec);
+      }
+    } else {
+      for (const y of [468, 490, 512]) {
+        el('path', { d: `M120,${y}Q160,${y - 15} 200,${y}T280,${y}`, fill: 'none', stroke: hsla(0, 0, 100, .45), 'stroke-width': 3 }, dec);
+      }
+    }
+    el('path', { d: 'M166,420Q146,470 158,518', fill: 'none', stroke: hsla(0, 0, 100, .32), 'stroke-width': 6, 'stroke-linecap': 'round' }, frente);
+    el('path', { d: 'M152,404Q200,414 248,404', fill: 'none', stroke: hsl(vh, vs, vl + 18), 'stroke-width': 3, 'stroke-linecap': 'round' }, frente);
+  } else {
+    // Frasco de vidrio con agua y cordel
+    const cuerpo = 'M150,404L150,420Q140,432 140,450L140,516Q140,534 158,534L242,534Q260,534 260,516L260,450Q260,432 250,420L250,404Z';
+    el('path', { d: cuerpo }, el('clipPath', { id: `${pref}-jc` }, defs));
+    const frente = el('g', { class: 'papel' }, svg);
+    retraso(frente, 1);
+    const agua = el('g', { 'clip-path': `url(#${pref}-jc)` }, frente);
+    el('rect', { x: 130, y: 438, width: 140, height: 100, fill: 'hsla(195,60%,82%,.35)' }, agua);
+    el('path', { d: 'M130,438Q150,431 170,438T210,438T250,438T290,438', fill: 'none', stroke: 'hsla(0,0%,100%,.6)', 'stroke-width': 2 }, agua);
+    el('path', { d: cuerpo, fill: 'rgba(255,255,255,.16)', stroke: 'rgba(255,255,255,.8)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, frente);
+    el('path', { d: 'M154,432Q148,470 150,514', fill: 'none', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 5, 'stroke-linecap': 'round' }, frente);
+    const cn2 = hsl(cinta[0], cinta[1], cinta[2]);
+    el('path', { d: 'M147,418Q200,430 253,418', fill: 'none', stroke: cn2, 'stroke-width': 3.4, 'stroke-linecap': 'round' }, frente);
+    el('path', { d: 'M200,427C188,411 174,424 190,430Z', fill: cn2 }, frente);
+    el('path', { d: 'M200,427C212,411 226,424 210,430Z', fill: cn2 }, frente);
+    el('circle', { cx: 200, cy: 428, r: 3, fill: cn2 }, frente);
+  }
+
+  // Voladores: mariposas, abejas y luciérnagas (2 o 3, distintas según el nombre)
+  const volador = (tipo, i, ex, ey, lado) => {
+    const escE = r(.95, 1.25);
+    const ext = el('g', { transform: `translate(${f(ex)},${f(ey)}) rotate(${f(r(-18, 18))}) scale(${f(escE)})` }, svg);
+    const flota = el('g', { class: 'extra' }, ext);
+    retraso(flota, t.extra + i * .5);
+    flota.style.animationDuration = `.9s, ${f(r(7, 13))}s`;
+
+    if (tipo === 0) {
+      const [ah, as, al] = pick(ALAS_MARIPOSA);
+      const ala = padre => {
+        const a = el('g', { class: 'ala' }, padre);
+        el('path', { d: 'M0,0C-6,-24 -34,-28 -30,-8C-28,0 -10,4 0,0Z', fill: hsl(ah, as, al), stroke: hsl(ah, as, al - 22), 'stroke-width': .8 }, a);
+        el('path', { d: 'M0,2C-16,4 -26,16 -20,22C-14,26 -4,14 0,2Z', fill: hsl(ah + 10, as, al + 6), stroke: hsl(ah, as, al - 22), 'stroke-width': .8 }, a);
+        el('circle', { cx: -22, cy: -11, r: 3.2, fill: hsla(0, 0, 100, .75) }, a);
+        el('circle', { cx: -15, cy: 14, r: 2, fill: hsla(0, 0, 100, .7) }, a);
+      };
+      ala(flota);
+      ala(el('g', { transform: 'scale(-1,1)' }, flota));
+      el('ellipse', { cx: 0, cy: 4, rx: 1.8, ry: 10, fill: '#3a2c10' }, flota);
+      el('path', { d: 'M0,-5Q-4,-14 -8,-15M0,-5Q4,-14 8,-15', fill: 'none', stroke: '#3a2c10', 'stroke-width': 1, 'stroke-linecap': 'round' }, flota);
+    } else if (tipo === 1) {
+      const cid = `${pref}-abeja${i}`;
+      const dir = el('g', { transform: lado === -1 ? 'scale(-1,1)' : '' }, flota);
+      el('path', { d: 'M12,2C30,-14 46,18 66,0', fill: 'none', stroke: hsla(35, 40, 30, .4), 'stroke-width': 1.4, 'stroke-dasharray': '2 5', 'stroke-linecap': 'round' }, dir);
+      el('ellipse', { cx: 0, cy: 0, rx: 12, ry: 8.5 }, el('clipPath', { id: cid }, defs));
+      for (const rot of [-20, 20]) {
+        const w = el('g', { transform: `translate(1,-7) rotate(${rot})` }, dir);
+        el('ellipse', { class: 'alab', cx: 0, cy: -6, rx: 5, ry: 8, fill: 'rgba(255,255,255,.75)', stroke: 'rgba(120,170,200,.6)', 'stroke-width': .8 }, w);
+      }
+      el('ellipse', { cx: 0, cy: 0, rx: 12, ry: 8.5, fill: '#ffc933' }, dir);
+      const rayas = el('g', { 'clip-path': `url(#${cid})` }, dir);
+      el('rect', { x: -4, y: -10, width: 4, height: 20, fill: '#3a2c10' }, rayas);
+      el('rect', { x: 4, y: -10, width: 4, height: 20, fill: '#3a2c10' }, rayas);
+      el('circle', { cx: -12, cy: 0, r: 5.5, fill: '#3a2c10' }, dir);
+      el('circle', { cx: -14, cy: -1.5, r: 1.1, fill: '#fff' }, dir);
+      el('path', { d: 'M12,0L17,0', stroke: '#3a2c10', 'stroke-width': 2, 'stroke-linecap': 'round' }, dir);
+    } else {
+      if (!defs.querySelector(`[id="${pref}-luz"]`)) {
+        gradiente(defs, `${pref}-luz`, 'radialGradient', {}, [
+          [0, 'rgba(240,255,120,.95)'], [.4, 'rgba(230,255,100,.4)'], [1, 'rgba(230,255,100,0)']
+        ]);
+      }
+      el('circle', { class: 'brillo', cx: 0, cy: 7, r: 20, fill: `url(#${pref}-luz)` }, flota);
+      el('ellipse', { cx: -4, cy: -2, rx: 3, ry: 6, fill: 'rgba(255,255,255,.6)', transform: 'rotate(-30 -4 -2)' }, flota);
+      el('ellipse', { cx: 4, cy: -2, rx: 3, ry: 6, fill: 'rgba(255,255,255,.6)', transform: 'rotate(30 4 -2)' }, flota);
+      el('ellipse', { cx: 0, cy: 0, rx: 2.6, ry: 6, fill: '#3a2c10' }, flota);
+      el('circle', { cx: 0, cy: -6.5, r: 2.4, fill: '#3a2c10' }, flota);
+      el('ellipse', { class: 'brillo', cx: 0, cy: 7, rx: 3.2, ry: 4, fill: '#f4ff8a' }, flota);
+    }
+  };
+  const nVol = 2 + Math.floor(rnd() * 2);
+  const ladoIni = rnd() < .5 ? -1 : 1;
+  for (let i = 0; i < nVol; i++) {
+    const lado = i % 2 ? -ladoIni : ladoIni;
+    const tipo = i === 0 ? hash % 3 : Math.floor(rnd() * 3);
+    volador(tipo, i, 200 + lado * r(150, 178), r(45, 115) + i * r(45, 80), lado);
   }
 
   // Chispitas que titilan
@@ -522,6 +605,16 @@ function crearFlor(nombre, pref) {
       fill: '#fffdf0', stroke: hsla(40, 80, 60, .6), 'stroke-width': .5
     }, g);
     retraso(ch, t.extra + r(0, 3));
+  }
+
+  // Polen que sube flotando desde las flores
+  const nPolen = 8 + Math.floor(rnd() * 8);
+  for (let i = 0; i < nPolen; i++) {
+    const c = cabezas[Math.floor(rnd() * cabezas.length)];
+    const g = el('g', { transform: `translate(${f(c.hx + r(-c.R, c.R))},${f(c.hy + r(-c.R * .3, c.R * .3))})` }, svg);
+    const p = el('circle', { class: 'polen', r: f(r(1.2, 2.6)), fill: hsla(52, 100, 80, .95), opacity: 0 }, g);
+    retraso(p, t.extra + r(0, 5));
+    p.style.animationDuration = `${f(r(4, 8))}s`;
   }
 
   return {
