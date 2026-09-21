@@ -120,6 +120,18 @@ const MENSAJES = [
   n => `${n}, hoy el sol y las flores se pusieron de acuerdo: tú brillas. Que lo sepas, que lo sientas y que esa luz te acompañe toda la temporada.`
 ];
 
+// Cierre que se suma al mensaje principal
+const CIERRES = [
+  'Feliz Día de la Primavera.',
+  'Que este día llegue lleno de flores y de cariño.',
+  'Que la primavera te llene de esperanza y de ganas de empezar.',
+  'Gracias por ser parte de esta primavera.',
+  'Guarda este ramo y ábrelo cada vez que necesites un poco de sol.',
+  'Que nunca te falte un motivo para sonreír.',
+  'Ojalá cada pétalo te recuerde lo valioso que eres.',
+  'Hoy el jardín entero se viste de amarillo para ti.'
+];
+
 /* ---------- Utilidades SVG ---------- */
 
 const f = n => Math.round(n * 100) / 100;
@@ -620,7 +632,7 @@ function crearFlor(nombre, pref) {
   return {
     svg,
     tiempos: t,
-    mensaje: MENSAJES[cyrb53(norm, 17) % MENSAJES.length](nombre)
+    mensaje: `${MENSAJES[cyrb53(norm, 17) % MENSAJES.length](nombre)} ${CIERRES[cyrb53(norm, 31) % CIERRES.length]}`
   };
 }
 
@@ -732,7 +744,7 @@ async function descargarPng() {
     const img = new Image();
     await new Promise((ok, ko) => { img.onload = ok; img.onerror = ko; img.src = url; });
 
-    const W = 1080, H = 1830;
+    const W = 1080, H = 1900;
     const c = document.createElement('canvas');
     c.width = W; c.height = H;
     const ctx = c.getContext('2d');
@@ -760,7 +772,7 @@ async function descargarPng() {
 
     ctx.fillStyle = '#7a6432';
     ctx.font = `italic 38px ${serif}`;
-    const lineas = partirLineas(ctx, mensajeEl.textContent, 900).slice(0, 5);
+    const lineas = partirLineas(ctx, mensajeEl.textContent, 900).slice(0, 7);
     lineas.forEach((l, i) => ctx.fillText(l, W / 2, 1508 + i * 52));
 
     ctx.font = `700 26px system-ui, sans-serif`;
