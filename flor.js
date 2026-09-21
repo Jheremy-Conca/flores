@@ -91,7 +91,6 @@ const PAPELES = [
   [[10, 50, 74], [12, 70, 87], [10, 40, 62]]    // rosado
 ];
 const CINTAS = [[120, 34, 32], [8, 66, 56], [28, 45, 28], [280, 30, 45]];
-const JARRONES = [[18, 55, 52], [210, 45, 45], [40, 30, 92], [150, 30, 40], [270, 30, 60], [8, 60, 45]];
 
 const MENSAJES = [
   n => `${n}, que hoy florezca todo lo bueno que llevas dentro. Que la primavera te regale días largos, cielos claros y motivos de sobra para sonreír.`,
@@ -123,7 +122,7 @@ const MENSAJES = [
 // Cierre que se suma al mensaje principal
 const CIERRES = [
   'Feliz Día de la Primavera.',
-  'Que este día llegue lleno de flores y de cariño.',
+  'Que hoy la primavera te abrace con todo su color y su cariño.',
   'Que la primavera te llene de esperanza y de ganas de empezar.',
   'Gracias por ser parte de esta primavera.',
   'Guarda este ramo y ábrelo cada vez que necesites un poco de sol.',
@@ -227,8 +226,8 @@ function crearFlor(nombre, pref) {
 
   const [pTras, pDel, pPli] = pick(PAPELES);
   const cinta = pick(CINTAS);
-  const holder = Math.floor(rnd() * 3);   // 0 papel, 1 jarrón, 2 frasco de vidrio
-  const gx = 200 + r(-4, 4), gy = holder === 2 ? 500 : 452;   // punto donde se juntan los tallos
+  const holder = (rnd(), 0);   // siempre ramo envuelto en papel
+  const gx = 200 + r(-4, 4), gy = 452;   // punto donde se juntan los tallos
 
   // Aura suave detrás del ramo
   gradiente(defs, `${pref}-aura`, 'radialGradient', {}, [
@@ -503,49 +502,6 @@ function crearFlor(nombre, pref) {
     el('path', { d: 'M196,467C182,458 166,462 172,470', fill: 'none', stroke: hsla(0, 0, 100, .3), 'stroke-width': 1.2, 'stroke-linecap': 'round' }, g);
   }
   el('ellipse', { cx: 200, cy: 468, rx: 7, ry: 6, fill: cn, stroke: cnO, 'stroke-width': .8 }, lazo);
-  } else if (holder === 1) {
-    // Jarrón de cerámica
-    const [vh, vs, vl] = pick(JARRONES);
-    const deco = Math.floor(rnd() * 3);
-    const cuerpo = 'M158,402Q150,402 152,416Q150,436 130,470Q118,512 158,530Q200,538 242,530Q282,512 270,470Q250,436 248,416Q250,402 242,402Z';
-    gradiente(defs, `${pref}-vz`, 'linearGradient', { x1: 0, y1: 0, x2: 1, y2: 0 }, [
-      [0, hsl(vh, vs, vl + 12)], [.45, hsl(vh, vs, vl)], [1, hsl(vh, vs, vl - 14)]
-    ]);
-    el('path', { d: cuerpo }, el('clipPath', { id: `${pref}-vc` }, defs));
-    const frente = el('g', { class: 'papel' }, svg);
-    retraso(frente, 1);
-    el('path', { d: cuerpo, fill: `url(#${pref}-vz)`, stroke: hsl(vh, vs, vl - 22), 'stroke-width': 1.2, 'stroke-linejoin': 'round' }, frente);
-    const dec = el('g', { 'clip-path': `url(#${pref}-vc)` }, frente);
-    if (deco === 0) {
-      el('rect', { x: 110, y: 446, width: 180, height: 10, fill: hsla(0, 0, 100, .4) }, dec);
-      el('rect', { x: 110, y: 492, width: 180, height: 5, fill: hsla(vh, vs, vl - 25, .5) }, dec);
-    } else if (deco === 1) {
-      for (let row = 0; row < 4; row++) for (let col = 0; col < 7; col++) {
-        el('circle', { cx: 132 + col * 22 + (row % 2) * 11, cy: 450 + row * 18, r: 3.2, fill: hsla(0, 0, 100, .45) }, dec);
-      }
-    } else {
-      for (const y of [468, 490, 512]) {
-        el('path', { d: `M120,${y}Q160,${y - 15} 200,${y}T280,${y}`, fill: 'none', stroke: hsla(0, 0, 100, .45), 'stroke-width': 3 }, dec);
-      }
-    }
-    el('path', { d: 'M166,420Q146,470 158,518', fill: 'none', stroke: hsla(0, 0, 100, .32), 'stroke-width': 6, 'stroke-linecap': 'round' }, frente);
-    el('path', { d: 'M152,404Q200,414 248,404', fill: 'none', stroke: hsl(vh, vs, vl + 18), 'stroke-width': 3, 'stroke-linecap': 'round' }, frente);
-  } else {
-    // Frasco de vidrio con agua y cordel
-    const cuerpo = 'M150,404L150,420Q140,432 140,450L140,516Q140,534 158,534L242,534Q260,534 260,516L260,450Q260,432 250,420L250,404Z';
-    el('path', { d: cuerpo }, el('clipPath', { id: `${pref}-jc` }, defs));
-    const frente = el('g', { class: 'papel' }, svg);
-    retraso(frente, 1);
-    const agua = el('g', { 'clip-path': `url(#${pref}-jc)` }, frente);
-    el('rect', { x: 130, y: 438, width: 140, height: 100, fill: 'hsla(195,60%,82%,.35)' }, agua);
-    el('path', { d: 'M130,438Q150,431 170,438T210,438T250,438T290,438', fill: 'none', stroke: 'hsla(0,0%,100%,.6)', 'stroke-width': 2 }, agua);
-    el('path', { d: cuerpo, fill: 'rgba(255,255,255,.16)', stroke: 'rgba(255,255,255,.8)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, frente);
-    el('path', { d: 'M154,432Q148,470 150,514', fill: 'none', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 5, 'stroke-linecap': 'round' }, frente);
-    const cn2 = hsl(cinta[0], cinta[1], cinta[2]);
-    el('path', { d: 'M147,418Q200,430 253,418', fill: 'none', stroke: cn2, 'stroke-width': 3.4, 'stroke-linecap': 'round' }, frente);
-    el('path', { d: 'M200,427C188,411 174,424 190,430Z', fill: cn2 }, frente);
-    el('path', { d: 'M200,427C212,411 226,424 210,430Z', fill: cn2 }, frente);
-    el('circle', { cx: 200, cy: 428, r: 3, fill: cn2 }, frente);
   }
 
   // Voladores: mariposas, abejas y luciérnagas (2 o 3, distintas según el nombre)
